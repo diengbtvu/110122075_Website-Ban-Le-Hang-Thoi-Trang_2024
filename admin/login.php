@@ -1,37 +1,36 @@
-
 <?php
-    session_start();
-    ob_start();
-    include "../model/connectdb.php";
-    include "../model/userdb.php";
+session_start();
+ob_start();
+include "../model/connectdb.php";
+include "../model/userdb.php";
 
-    // Tạo CSRF token nếu chưa có
-    if (empty($_SESSION['csrf_token'])) {
-        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+// Tạo CSRF token nếu chưa có
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        die('CSRF token validation failed');
     }
 
-    if(isset($_POST['user_check'])) {
-        if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
-            die('CSRF token validation failed');
-        }
+    $user = htmlspecialchars(trim($_POST['username']));
+    $pass = trim($_POST['password']);
 
-        $user = htmlspecialchars(trim($_POST['username']));
-        $pass = trim($_POST['password']);
-
-        if(empty($user) || empty($pass)) {
-            $error_msg = "Vui lòng điền đầy đủ thông tin!";
+    if (empty($user) || empty($pass)) {
+        $error_msg = "Vui lòng điền đầy đủ thông tin!";
+    } else {
+        $role = check_user($user, $pass);
+        if ($role == 1) {
+            $_SESSION['name'] = $user;
+            $_SESSION['role'] = $role;
+            header('location: admin.php?act=statistic');
+            exit();
         } else {
-            $role = check_user($user, $pass);
-            if($role == 1) {
-                $_SESSION['name'] = $user;
-                $_SESSION['role'] = $role;
-                header('location: admin.php?act=statistic');
-                exit();
-            } else {
-                $error_msg = "Tên đăng nhập hoặc mật khẩu không đúng!";
-            }
+            $error_msg = "Tên đăng nhập hoặc mật khẩu không đúng!";
         }
     }
+}
 ?>
 
 <!DOCTYPE html>
@@ -61,7 +60,7 @@
                         <div class="sub header">Vui lòng đăng nhập để tiếp tục</div>
                     </div>
                 </h2>
-                <?php if(isset($error_msg)): ?>
+                <?php if (isset($error_msg)): ?>
                     <div class="ui negative message">
                         <i class="close icon"></i>
                         <div class="header">Đăng nhập thất bại</div>
