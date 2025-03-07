@@ -1,8 +1,8 @@
 <?php
     function connectdb(){
-        $servername = "localhost";
-        $username = "root";
-        $password = "";
+        $servername = "db";
+        $username = "user";
+        $password = "password";
 
         try {
         $conn = new PDO("mysql:host=$servername;dbname=new_database", $username, $password);
